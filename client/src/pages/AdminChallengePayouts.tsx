@@ -235,11 +235,7 @@ export default function AdminChallengePayouts() {
       queryKey: ['/api/admin/payout-jobs', jobId, 'status'],
       queryFn: async () => {
         try {
-          const response = await fetch(`/api/admin/payout-jobs/${jobId}/status`, {
-            credentials: 'include',
-          });
-          if (!response.ok) throw new Error('Failed to fetch status');
-          return response.json();
+          return await adminApiRequest(`/api/admin/payout-jobs/${jobId}/status`, { credentials: 'include' });
         } catch (error) {
           console.error('Error fetching payout job status:', error);
           return null;
@@ -898,9 +894,8 @@ export default function AdminChallengePayouts() {
                         onClick={async () => {
                           try {
                             setBonusLoading(true);
-                            const res = await fetch('/api/admin/challenges/bonus', {
+                            await adminApiRequest('/api/admin/challenges/bonus', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
                               credentials: 'include',
                               body: JSON.stringify({
                                 challengeId: selectedChallengeId,
@@ -909,7 +904,6 @@ export default function AdminChallengePayouts() {
                                 durationHours: bonusData.durationHours,
                               }),
                             });
-                            if (!res.ok) throw new Error('Failed to activate bonus');
                             toast({ title: 'Bonus Activated', description: `${bonusData.bonusMultiplier}x multiplier on ${bonusData.bonusSide} side` });
                             queryClient.invalidateQueries({ queryKey: ['/api/admin/challenges'] });
                           } catch (err: any) {
@@ -1067,25 +1061,23 @@ export default function AdminChallengePayouts() {
                 <Button
                   variant="destructive"
                   disabled={bonusLoading}
-                  onClick={async () => {
-                    try {
-                      setBonusLoading(true);
-                      const res = await fetch('/api/admin/challenges/bonus', {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ challengeId: bonusData.challengeId }),
-                      });
-                      if (!res.ok) throw new Error('Failed to remove bonus');
-                      toast({ title: '✅ Bonus Removed', description: 'The bonus has been cancelled' });
-                      queryClient.invalidateQueries({ queryKey: ['/api/admin/challenges'] });
-                      setBonusOpen(false);
-                    } catch (err: any) {
-                      toast({ title: '❌ Error', description: err.message, variant: 'destructive' });
-                    } finally {
-                      setBonusLoading(false);
-                    }
-                  }}
+                    onClick={async () => {
+                      try {
+                        setBonusLoading(true);
+                        await adminApiRequest('/api/admin/challenges/bonus', {
+                          method: 'DELETE',
+                          credentials: 'include',
+                          body: JSON.stringify({ challengeId: bonusData.challengeId }),
+                        });
+                        toast({ title: '✅ Bonus Removed', description: 'The bonus has been cancelled' });
+                        queryClient.invalidateQueries({ queryKey: ['/api/admin/challenges'] });
+                        setBonusOpen(false);
+                      } catch (err: any) {
+                        toast({ title: '❌ Error', description: err.message, variant: 'destructive' });
+                      } finally {
+                        setBonusLoading(false);
+                      }
+                    }}
                   className="text-xs h-8"
                 >
                   {bonusLoading ? 'Removing...' : 'Remove'}
@@ -1103,9 +1095,8 @@ export default function AdminChallengePayouts() {
                     const durationHours = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
                     const customAmount = parseInt(customBonusAmounts[bonusData.bonusMultiplier as keyof typeof customBonusAmounts] || '0');
                     
-                    const res = await fetch('/api/admin/challenges/bonus', {
+                    await adminApiRequest('/api/admin/challenges/bonus', {
                       method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
                       credentials: 'include',
                       body: JSON.stringify({
                         challengeId: bonusData.challengeId,
@@ -1115,7 +1106,6 @@ export default function AdminChallengePayouts() {
                         bonusAmount: customAmount,
                       }),
                     });
-                    if (!res.ok) throw new Error('Failed to activate bonus');
                     toast({ title: '✅ Bonus Activated', description: `${bonusData.bonusMultiplier}x (₦${customAmount.toLocaleString()}) on ${bonusData.bonusSide} side until challenge ends` });
                     queryClient.invalidateQueries({ queryKey: ['/api/admin/challenges'] });
                     setBonusOpen(false);

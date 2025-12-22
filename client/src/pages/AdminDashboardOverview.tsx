@@ -149,16 +149,11 @@ export default function AdminDashboardOverview() {
   // Mutation for activating bonuses
   const activateBonusMutation = useMutation({
     mutationFn: async (data: { challengeId: number; bonusSide: string; bonusMultiplier: number; durationHours: number }) => {
-      const response = await fetch("/api/admin/challenges/bonus", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("adminToken")}`,
-        },
+      return adminApiRequest('/api/admin/challenges/bonus', {
+        method: 'POST',
+        credentials: 'include',
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to activate bonus");
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/challenges"] });

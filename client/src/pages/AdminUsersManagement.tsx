@@ -70,14 +70,11 @@ export default function AdminUsersManagement() {
 
   const userActionMutation = useMutation({
     mutationFn: async (data: z.infer<typeof userActionSchema> & { userId: string }) => {
-      const response = await fetch(`/api/admin/users/${data.userId}/action`, {
+      return adminApiRequest(`/api/admin/users/${data.userId}/action`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
         credentials: 'include',
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to execute action');
-      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { adminApiRequest } from '@/lib/adminApi';
 import AdminLayout from "@/components/AdminLayout";
 import { 
   DollarSign, 
@@ -43,20 +44,17 @@ export default function AdminPayoutDashboard() {
   const { data: pendingPayouts = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/admin/payouts/pending'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/payouts/pending', {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch payouts');
-      return response.json();
+      return adminApiRequest('/api/admin/payouts/pending', { credentials: 'include' });
     },
     retry: false,
   });
 
   const processPayout = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: number }) => {
-      return apiRequest('POST', `/api/admin/payouts/process`, { 
-        userId,
-        amount,
+      return adminApiRequest('/api/admin/payouts/process', {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ userId, amount }),
       });
     },
     onSuccess: (data) => {
@@ -78,8 +76,10 @@ export default function AdminPayoutDashboard() {
 
   const processBatchPayouts = useMutation({
     mutationFn: async (userIds: string[]) => {
-      return apiRequest('POST', `/api/admin/payouts/batch`, { 
-        userIds,
+      return adminApiRequest('/api/admin/payouts/batch', {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ userIds }),
       });
     },
     onSuccess: (data) => {

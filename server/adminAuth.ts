@@ -4,6 +4,7 @@ import { storage } from "./storage";
 
 interface AdminAuthRequest extends Request {
   adminUser?: any;
+  user?: any;
 }
 
 export const adminAuth = async (req: AdminAuthRequest, res: Response, next: NextFunction) => {
@@ -38,6 +39,8 @@ export const adminAuth = async (req: AdminAuthRequest, res: Response, next: Next
     }
 
     req.adminUser = user;
+    // Also set `req.user` for compatibility with existing handlers
+    req.user = user;
     next();
   } catch (error) {
     console.error('Admin authentication error:', error);

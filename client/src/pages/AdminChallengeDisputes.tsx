@@ -71,13 +71,7 @@ export default function AdminChallengeDisputes() {
     queryKey: ["/api/admin/challenges/pending"],
     queryFn: async () => {
       try {
-        const response = await fetch("/api/admin/challenges/pending", {
-          credentials: "include",
-        });
-        if (!response.ok) {
-          return [];
-        }
-        return response.json();
+        return await adminApiRequest('/api/admin/challenges/pending', { credentials: 'include' });
       } catch (error) {
         console.error("Error fetching pending challenges:", error);
         return [];
@@ -96,9 +90,10 @@ export default function AdminChallengeDisputes() {
       decision: 'challenger_won' | 'challenged_won' | 'refund'; 
       notes: string;
     }) => {
-      return apiRequest('POST', `/api/admin/challenges/${challengeId}/resolve-dispute`, { 
-        decision, 
-        adminNotes: notes 
+      return adminApiRequest(`/api/admin/challenges/${challengeId}/resolve-dispute`, {
+        method: 'POST',
+        credentials: 'include',
+        body: JSON.stringify({ decision, adminNotes: notes }),
       });
     },
     onSuccess: (data) => {

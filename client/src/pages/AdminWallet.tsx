@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { adminApiRequest } from '@/lib/adminApi';
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,31 +78,18 @@ export default function AdminWallet() {
   const { data: wallet, isLoading, refetch } = useQuery<WalletData>({
     queryKey: ['/api/admin/wallet'],
     queryFn: async () => {
-      const res = await fetch('/api/admin/wallet', {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch wallet');
-      return res.json();
+      return adminApiRequest('/api/admin/wallet', { credentials: 'include' });
     },
   });
 
   // Load funds mutation (initializes Paystack)
   const loadFundsMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const res = await fetch('/api/admin/wallet/load', {
+      return adminApiRequest('/api/admin/wallet/load', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          amount,
-          reference: `load_${Date.now()}`,
-        }),
+        body: JSON.stringify({ amount, reference: `load_${Date.now()}` }),
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to initialize payment');
-      }
-      return res.json();
     },
     onSuccess: (data: any) => {
       if (data.authorization_url && data.reference) {
@@ -130,17 +118,11 @@ export default function AdminWallet() {
   // Withdraw funds mutation
   const withdrawMutation = useMutation({
     mutationFn: async (amount: number) => {
-      const res = await fetch('/api/admin/wallet/withdraw', {
+      return adminApiRequest('/api/admin/wallet/withdraw', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ amount }),
       });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || 'Failed to withdraw');
-      }
-      return res.json();
     },
     onSuccess: (data) => {
       toast({ 
@@ -533,52 +515,29 @@ export default function AdminWallet() {
 
             (async () => {
               try {
-                const response = await fetch("/api/admin/wallet/verify-payment", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  credentials: "include",
+                const data = await adminApiRequest('/api/admin/wallet/verify-payment', {
+                  method: 'POST',
+                  credentials: 'include',
                   body: JSON.stringify({ reference: paymentReference }),
                 });
 
-                if (!response.ok) {
-                  const error = await response.json();
-                  const msg = error.message?.toLowerCase() || "";
-                  // Some backends incorrectly return 400 but include success-like messages
-                  if (msg.includes("success") || msg.includes("verified")) {
-                    toast({
-                      title: "Payment Verified",
-                      description: "Your deposit has been credited to your account!",
-                    });
-                    queryClient.invalidateQueries({
-                      queryKey: ["/api/admin/wallet"],
-                    });
-                    setLoadAmount("");
-                    setShowLoadModal(false);
-                  } else {
-                    toast({
-                      title: "Payment Pending",
-                      description: "We'll verify your payment shortly.",
-                    });
-                  }
-                } else {
-                  const data = await response.json();
-                  toast({
-                    title: "Payment Verified",
-                    description:
-                      data?.message ||
-                      "Your deposit has been credited to your account!",
-                  });
-                  queryClient.invalidateQueries({
-                    queryKey: ["/api/admin/wallet"],
-                  });
-                  setLoadAmount("");
-                  setShowLoadModal(false);
-                }
-              } catch (error) {
                 toast({
-                  title: "Payment Pending",
-                  description: "We'll verify your payment shortly.",
+                  title: 'Payment Verified',
+                  description: data?.message || 'Your deposit has been credited to your account!',
                 });
+                queryClient.invalidateQueries({ queryKey: ['/api/admin/wallet'] });
+                setLoadAmount('');
+                setShowLoadModal(false);
+              } catch (error: any) {
+                const msg = (error.message || '').toLowerCase();
+                if (msg.includes('success') || msg.includes('verified')) {
+                  toast({ title: 'Payment Verified', description: 'Your deposit has been credited to your account!' });
+                  queryClient.invalidateQueries({ queryKey: ['/api/admin/wallet'] });
+                  setLoadAmount('');
+                  setShowLoadModal(false);
+                } else {
+                  toast({ title: 'Payment Pending', description: "We'll verify your payment shortly." });
+                }
               }
             })();
           }

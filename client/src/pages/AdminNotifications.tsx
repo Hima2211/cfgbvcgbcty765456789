@@ -78,14 +78,11 @@ export default function AdminNotifications() {
 
   const sendNotificationMutation = useMutation({
     mutationFn: async (data: z.infer<typeof notificationSchema>) => {
-      const response = await fetch('/api/admin/notifications/send', {
+      return adminApiRequest('/api/admin/notifications/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
         credentials: 'include',
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to send notification');
-      return response.json();
     },
     onSuccess: (data) => {
       toast({
@@ -107,12 +104,10 @@ export default function AdminNotifications() {
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      const response = await fetch(`/api/admin/notifications/${notificationId}`, {
+      return adminApiRequest(`/api/admin/notifications/${notificationId}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-      if (!response.ok) throw new Error('Failed to delete notification');
-      return response.json();
     },
     onSuccess: () => {
       toast({

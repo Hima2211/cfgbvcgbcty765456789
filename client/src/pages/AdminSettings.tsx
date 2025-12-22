@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { adminApiRequest } from '@/lib/adminApi';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Settings, 
@@ -80,16 +81,17 @@ export default function AdminSettings() {
 
   const { data: platformSettings, isLoading } = useQuery({
     queryKey: ["/api/admin/settings"],
+    queryFn: async () => adminApiRequest('/api/admin/settings', { credentials: 'include' }),
     retry: false,
   });
-
    const { data: users } = useQuery({
     queryKey: ["/api/admin/users"],
+    queryFn: async () => adminApiRequest('/api/admin/users', { credentials: 'include' }),
     retry: false,
   });
-
   const { data: events } = useQuery({
     queryKey: ["/api/admin/events"],
+    queryFn: async () => adminApiRequest('/api/admin/events', { credentials: 'include' }),
     retry: false,
   });
 
@@ -102,14 +104,11 @@ export default function AdminSettings() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (updatedSettings: Partial<PlatformSettings>) => {
-      const response = await fetch('/api/admin/settings', {
+      return adminApiRequest('/api/admin/settings', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedSettings),
         credentials: 'include',
+        body: JSON.stringify(updatedSettings),
       });
-      if (!response.ok) throw new Error('Failed to update settings');
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -150,27 +149,17 @@ export default function AdminSettings() {
 
     setIsAddingFunds(true);
     try {
-      const response = await fetch('/api/admin/events/add-funds', {
+      await adminApiRequest('/api/admin/events/add-funds', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          eventId: parseInt(selectedEventId),
-          amount: parseFloat(fundAmount)
-        }),
+        body: JSON.stringify({ eventId: parseInt(selectedEventId), amount: parseFloat(fundAmount) }),
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success ✅",
-          description: `Added ₦${fundAmount} to event pool`,
-        });
-        setSelectedEventId('');
-        setFundAmount('');
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
+      toast({
+        title: "Success ✅",
+        description: `Added ₦${fundAmount} to event pool`,
+      });
+      setSelectedEventId('');
+      setFundAmount('');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -194,33 +183,16 @@ export default function AdminSettings() {
 
     setIsGivingPoints(true);
     try {
-      const response = await fetch('/api/admin/users/give-points', {
+      await adminApiRequest('/api/admin/users/give-points', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          userId: selectedUserId,
-          points: parseInt(pointsAmount)
-        }),
+        body: JSON.stringify({ userId: selectedUserId, points: parseInt(pointsAmount) }),
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success ✅",
-          description: `Gave ${pointsAmount} points to user`,
-        });
-        setSelectedUserId('');
-        setPointsAmount('');
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
+      toast({ title: "Success ✅", description: `Gave ${pointsAmount} points to user` });
+      setSelectedUserId('');
+      setPointsAmount('');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to give points",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to give points", variant: "destructive" });
     } finally {
       setIsGivingPoints(false);
     }
@@ -238,32 +210,15 @@ export default function AdminSettings() {
 
     setIsBroadcasting(true);
     try {
-      const response = await fetch('/api/admin/broadcast', {
+      await adminApiRequest('/api/admin/broadcast', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          message: broadcastMessage,
-          type: broadcastType
-        }),
+        body: JSON.stringify({ message: broadcastMessage, type: broadcastType }),
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success ✅",
-          description: `${broadcastType} message broadcasted to all users`,
-        });
-        setBroadcastMessage('');
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
+      toast({ title: "Success ✅", description: `${broadcastType} message broadcasted to all users` });
+      setBroadcastMessage('');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to broadcast message",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to broadcast message", variant: "destructive" });
     } finally {
       setIsBroadcasting(false);
     }
@@ -281,33 +236,16 @@ export default function AdminSettings() {
 
     setIsUpdatingCapacity(true);
     try {
-      const response = await fetch('/api/admin/events/update-capacity', {
+      await adminApiRequest('/api/admin/events/update-capacity', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          eventId: parseInt(eventCapacityId),
-          additionalSlots: parseInt(additionalSlots)
-        }),
+        body: JSON.stringify({ eventId: parseInt(eventCapacityId), additionalSlots: parseInt(additionalSlots) }),
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success ✅",
-          description: `Added ${additionalSlots} slots to event capacity`,
-        });
-        setEventCapacityId('');
-        setAdditionalSlots('');
-      } else {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
+      toast({ title: "Success ✅", description: `Added ${additionalSlots} slots to event capacity` });
+      setEventCapacityId('');
+      setAdditionalSlots('');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update event capacity",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message || "Failed to update event capacity", variant: "destructive" });
     } finally {
       setIsUpdatingCapacity(false);
     }
