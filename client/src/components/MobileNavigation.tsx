@@ -37,18 +37,18 @@ export function MobileNavigation({
 
   const navItems = [
     {
-      path: "/events",
-      iconPath: "/assets/eventssvg.svg",
-      label: "Events",
-      isActive: location.startsWith("/events") || location === "/",
-      tourId: "events",
-    },
-    {
       path: "/challenges",
       iconPath: "/assets/versus.svg",
       label: "Challenges",
       isActive: location.startsWith("/challenges"),
       tourId: "challenges",
+    },
+    {
+      path: "/events",
+      iconPath: "/assets/eventssvg.svg",
+      label: "Events",
+      isActive: location.startsWith("/events") || location === "/",
+      tourId: "events",
     },
     {
       path: "create",

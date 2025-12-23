@@ -225,7 +225,6 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
             {/* User avatars or open icon */}
             {isOpenAdminChallenge ? (
               <div className="flex items-center flex-shrink-0">
-                {/* Cover image replaces platform logo, or show Bantah logo if no image */}
                 {challenge.coverImageUrl ? (
                   <img 
                     src={challenge.coverImageUrl} 
@@ -265,12 +264,22 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {isMyChallenge && <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs">You</Badge>}
-            {getStatusBadge(challenge.status)}
+            {challenge.status !== 'open' && getStatusBadge(challenge.status)}
+            {challenge.status === 'open' && getBonusBadge() && (
+              <Badge variant="outline" className="inline-flex items-center gap-1 mr-1 px-1 py-0.5 rounded-full text-[11px] bg-emerald-600 text-white">
+                <Zap className="w-3 h-3" />
+                <span className="font-semibold text-[11px]">{getBonusBadge()?.multiplier}</span>
+                {getBonusBadge()?.amount ? (
+                  <span className="text-[11px] ml-0.5">₦{getBonusBadge()!.amount.toLocaleString()}</span>
+                ) : null}
+                <span className="ml-1 text-[10px] bg-white/20 text-white px-1 py-0.5 rounded">{getBonusBadge()?.daysLeft}d</span>
+              </Badge>
+            )}
             {challenge.status === 'open' && (
               <div onClick={(e) => e.stopPropagation()}>
                 <CompactShareButton 
                   shareData={challengeShareData.shareData}
-                  className="text-primary hover:text-primary/80 h-5 w-5"
+                  className="text-primary h-5 w-5"
                 />
               </div>
             )}
@@ -278,42 +287,35 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
         </div>
 
         {challenge.description && (
-          <div className="flex-1 mb-2 md:mb-3 min-h-[44px] max-h-[44px] overflow-hidden">
+          <div className="mb-1 md:mb-2 min-h-[44px] max-h-[44px] overflow-hidden">
             <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{challenge.description}</p>
           </div>
         )}
 
-        {/* Bonus Indicator */}
-        {isBonusActive && getBonusBadge() && (
-          <div className="mb-2 md:mb-3 p-2 md:p-3 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Zap className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                <span className="text-xs md:text-sm font-semibold text-orange-700 dark:text-orange-300">
-                  Bonus: {getBonusBadge()?.multiplier} ({getBonusBadge()?.amount ? `₦${getBonusBadge()?.amount.toLocaleString()}` : '0'}) on {getBonusBadge()?.side} side
-                </span>
-              </div>
-              <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-900 dark:text-orange-300 dark:border-orange-700">
-                {getBonusBadge()?.daysLeft}d left
-              </Badge>
-            </div>
+        {/* Instruction for open challenges */}
+        {challenge.status === 'open' && (
+          <div className="mb-1">
+            <span className="text-xs text-slate-400">Choose YES or NO to enter this challenge</span>
           </div>
         )}
 
+        {/* Compact bonus indicator moved beside the potential win label below */}
+
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Badge className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
               <span className="text-xs font-semibold">Stake: ₦{amountNum.toLocaleString()}</span>
             </Badge>
-            <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
-              <span className="text-xs font-semibold">Pool: ₦{totalPool.toLocaleString()}{bonusMul > 1 ? ` (${bonusMul}× bonus)` : ''}</span>
+            <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 flex items-center">
+              <span className="text-xs font-semibold">Potential win: ₦{potentialWin.toLocaleString()}</span>
             </Badge>
+            {/* duplicate compact bonus pill removed — main badge retained below description */}
           </div>
               <div className="flex items-center space-x-1 text-[11px] text-slate-600 dark:text-slate-400">
               {/* Category icon + label */}
-              <span className="capitalize flex items-center gap-1">
+              <span className="flex items-center gap-1" aria-hidden>
                 <CategoryIcon category={challenge.category} />
-                <span>{challenge.category}</span>
+                <span className="sr-only">{challenge.category}</span>
               </span>
               <span className="text-slate-400">•</span>
               <span className="text-slate-500 dark:text-slate-400">
@@ -328,7 +330,7 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
               <>
                 <Button
                   size="sm"
-                  className="bg-emerald-600 text-white hover:bg-emerald-700 h-6 px-2 text-xs"
+                  className="bg-emerald-600 text-white h-6 px-2 text-xs"
                   onClick={(e) => { e.stopPropagation(); acceptChallengeMutation.mutate(); }}
                   disabled={acceptChallengeMutation.isPending}
                 >
@@ -360,28 +362,19 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
               </Button>
             )}
             {(challenge.status === 'active' || challenge.status === 'pending') && onChatClick && (
-              <Button 
+                <Button 
                 size="sm" 
                 variant="outline"
-                className="border-blue-500 text-blue-600 hover:bg-blue-50 h-6 px-2 text-xs"
+                className="border-blue-500 text-blue-600 h-6 px-2 text-xs"
                 onClick={(e) => { e.stopPropagation(); onChatClick({ ...challenge, amount: String(challenge.amount) }); }}
               >
                 <MessageCircle className="w-3 h-3 mr-1" />
                 Chat
               </Button>
             )}
-            {challenge.status === 'open' && onChatClick && (
-              <Button 
-                size="sm" 
-                className="bg-primary text-white hover:bg-primary/90 h-6 px-2 text-xs"
-                onClick={(e) => { e.stopPropagation(); onChatClick({ ...challenge, amount: String(challenge.amount) }); }}
-              >
-                <Eye className="w-3 h-3 mr-1" />
-                Join
-              </Button>
-            )}
+            {/* Bonus info moved to header before share icon */}
             {challenge.status === 'active' && !onChatClick && (
-              <Button size="sm" className="bg-primary text-white hover:bg-primary/90 h-6 px-2 text-xs">
+              <Button size="sm" className="bg-primary text-white h-6 px-2 text-xs">
                 <Eye className="w-3 h-3 mr-1" />
                 View
               </Button>

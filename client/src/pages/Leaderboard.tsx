@@ -186,7 +186,7 @@ export default function Leaderboard() {
                 {filteredUsers.map((player: any, index: number) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-2 md:p-3 bg-white dark:bg-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                    className="flex items-center justify-between p-1 md:p-2 bg-white dark:bg-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
                     onClick={() => setSelectedProfileUserId(player.id)}
                   >
                     <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
@@ -219,7 +219,7 @@ export default function Leaderboard() {
                           </div>
                         )}
                         {/* Level Badge */}
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-white dark:border-slate-800">
+                        <div className="absolute -bottom-0 -right-0 w-4 h-4 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 border-2 border-white dark:border-slate-800">
                           <img
                             src={getLevelIcon(player.level || 1)}
                             alt={`${getLevelName(player.level || 1)} Level ${player.level || 1} badge`}
@@ -236,18 +236,12 @@ export default function Leaderboard() {
 
                           {/* Win Badges - moved under username */}
                           <div className="flex items-center gap-1.5">
-                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs">
-                              <span className="text-xs">🏆</span>
-                              <span className="font-medium">
-                                {player.eventsWon || 0}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-xs">
-                              <span className="text-xs">⚔️</span>
-                              <span className="font-medium">
-                                {player.challengesWon || 0}
-                              </span>
-                            </div>
+                              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full text-xs">
+                                <span className="text-xs">⚔️</span>
+                                <span className="font-medium">
+                                  {player.challengesWon || 0}
+                                </span>
+                              </div>
                           </div>
                         </div>
                       </div>

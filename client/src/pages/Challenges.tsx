@@ -8,6 +8,7 @@ import { JoinChallengeModal } from "@/components/JoinChallengeModal";
 import { ChallengePreviewCard } from "@/components/ChallengePreviewCard";
 import { BantMap } from "@/components/BantMap";
 import { Button } from "@/components/ui/button";
+import CategoryBar from "@/components/CategoryBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -50,6 +51,7 @@ import {
   Zap,
   Users,
   Shield,
+  Search,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import React from "react";
@@ -74,6 +76,25 @@ export default function Challenges() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [preSelectedUser, setPreSelectedUser] = useState<any>(null);
   const [selectedTab, setSelectedTab] = useState<string>('featured');
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Listen for header search events dispatched from Navigation
+  React.useEffect(() => {
+    const onSearch = (e: any) => {
+      const val = e?.detail ?? "";
+      setSearchTerm(val);
+    };
+    const onOpen = () => setIsSearchOpen(true);
+
+    window.addEventListener("challenges-search", onSearch as EventListener);
+    window.addEventListener("open-challenges-search", onOpen as EventListener);
+
+    return () => {
+      window.removeEventListener("challenges-search", onSearch as EventListener);
+      window.removeEventListener("open-challenges-search", onOpen as EventListener);
+    };
+  }, []);
 
   const form = useForm<z.infer<typeof createChallengeSchema>>({
     resolver: zodResolver(createChallengeSchema),
@@ -179,18 +200,22 @@ export default function Challenges() {
   });
 
   const categories = [
-    { value: "gaming", label: "Gaming", icon: "fas fa-gamepad" },
-    { value: "sports", label: "Sports", icon: "fas fa-dumbbell" },
-    { value: "trading", label: "Trading", icon: "fas fa-chart-line" },
-    { value: "fitness", label: "Fitness", icon: "fas fa-running" },
-    { value: "skill", label: "Skill", icon: "fas fa-brain" },
-    { value: "other", label: "Other", icon: "fas fa-star" },
+    { id: "create", label: "Create", icon: "/assets/create.png", gradient: "from-green-400 to-emerald-500", isCreate: true },
+    { id: "all", label: "All Challenges", icon: "/assets/versus.svg", gradient: "from-blue-400 to-purple-500" },
+    { id: "sports", label: "Sports", icon: "/assets/sportscon.svg", gradient: "from-green-400 to-blue-500" },
+    { id: "gaming", label: "Gaming", icon: "/assets/gamingsvg.svg", gradient: "from-gray-400 to-gray-600" },
+    { id: "crypto", label: "Crypto", icon: "/assets/cryptosvg.svg", gradient: "from-yellow-400 to-orange-500" },
+    { id: "trading", label: "Trading", icon: "/assets/cryptosvg.svg", gradient: "from-yellow-400 to-orange-500" },
+    { id: "music", label: "Music", icon: "/assets/musicsvg.svg", gradient: "from-blue-400 to-purple-500" },
+    { id: "entertainment", label: "Entertainment", icon: "/assets/popcorn.svg", gradient: "from-pink-400 to-red-500" },
+    { id: "politics", label: "Politics", icon: "/assets/poltiii.svg", gradient: "from-green-400 to-teal-500" },
+    { id: "general", label: "General", icon: "/assets/default-event-banner.jpg", gradient: "from-slate-400 to-slate-600" },
   ];
 
   const filteredChallenges = challenges.filter((challenge: any) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
+    const searchLower = searchTerm ? searchTerm.toLowerCase() : "";
+    const matchesSearch =
+      !searchTerm ||
       (challenge.title || "").toLowerCase().includes(searchLower) ||
       (challenge.description || "").toLowerCase().includes(searchLower) ||
       (challenge.category || "").toLowerCase().includes(searchLower) ||
@@ -199,8 +224,12 @@ export default function Challenges() {
         .includes(searchLower) ||
       (challenge.challengedUser?.username || "")
         .toLowerCase()
-        .includes(searchLower)
-    );
+        .includes(searchLower);
+
+    const matchesCategory =
+      selectedCategory === "all" || challenge.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
   });
 
   const filteredUsers = allUsers.filter((u: any) => {
@@ -328,10 +357,13 @@ export default function Challenges() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 theme-transition pb-[50px]">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 sm:px-6 lg:px-8 py-3 md:py-8">
         {/* Header - spacing reduced after removing intro text */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
-          <div className="hidden md:block"></div>
+          <div className="hidden md:block" />
+
+          {/* Header spacing (search is handled by global Navigation) */}
+          <div className="flex items-center space-x-2 mt-2 sm:mt-0" />
 
           <Dialog
             open={isCreateDialogOpen}
@@ -606,22 +638,106 @@ export default function Challenges() {
           </Dialog>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center gap-2 mb-4">
-          <Input
-            placeholder="Search challenges and users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 flex-1 focus:ring-2 focus:ring-slate-400 focus:ring-offset-0 focus:border-slate-400 focus-visible:ring-slate-400 placeholder:text-slate-400 placeholder:text-sm"
-          />
-          {/* Bant MAP button hidden for now */}
-          <Button
-            className="bg-[#7440ff] text-white font-black px-4 py-2 rounded-lg shadow hover:bg-[#7440ff]/90 whitespace-nowrap"
-            onClick={() => setIsCreateDialogOpen(true)}
-          >
-            + Challenge
-          </Button>
+        {/* Category Bar */}
+        <div className="sticky top-8 -mt-8 bg-slate-50 dark:bg-slate-900 z-40 py-2.5">
+          <div className="container mx-auto px-4">
+            <CategoryBar
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelect={(id) => {
+                if (id === 'create') {
+                  setIsCreateDialogOpen(true);
+                  return;
+                }
+                setSelectedCategory(id);
+              }}
+            />
+          </div>
         </div>
+
+        {/* Mobile Search Dialog (desktop shows header input) */}
+        <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <DialogContent className="sm:max-w-md max-w-[95vw] max-h-[80vh] overflow-y-auto p-4">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="text-base">Search Challenges & Users</DialogTitle>
+            </DialogHeader>
+
+            <div className="py-2">
+              <Input
+                autoFocus
+                placeholder="Search challenges and users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="mb-3 w-full bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+              />
+
+              {/* Users results (mobile) */}
+              {searchTerm && filteredUsers.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                    Users ({filteredUsers.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {filteredUsers.slice(0, 6).map((userItem: any) => (
+                      <div
+                        key={userItem.id}
+                        className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <UserAvatar
+                            userId={userItem.id}
+                            username={userItem.username}
+                            size={40}
+                            className="h-10 w-10"
+                          />
+                          <div>
+                            <div className="font-medium text-sm text-slate-900 dark:text-slate-100">
+                              {userItem.firstName || userItem.username || "Anonymous"}
+                            </div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              @{userItem.username || "unknown"}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            form.setValue("challenged", userItem.id);
+                            setPreSelectedUser(userItem);
+                            setIsCreateDialogOpen(true);
+                            setIsSearchOpen(false);
+                          }}
+                        >
+                          Challenge
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Challenges (mobile) */}
+              {searchTerm && filteredChallenges.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                    Challenges ({filteredChallenges.length})
+                  </h3>
+                  {filteredChallenges.slice(0, 6).map((c: any) => (
+                    <div key={c.id} className="p-2 bg-white dark:bg-slate-800 rounded-md flex items-center justify-between border border-slate-200 dark:border-slate-700">
+                      <div>
+                        <div className="font-medium text-sm">{c.title}</div>
+                        <div className="text-xs text-slate-500">{c.category}</div>
+                      </div>
+                      <Button size="sm" onClick={() => { setSelectedChallenge(c); setIsSearchOpen(false); setShowChat(true); }}>
+                        Open
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Search Results for Users */}
         {searchTerm && filteredUsers.length > 0 && (
@@ -736,7 +852,7 @@ export default function Challenges() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="featured" className="space-y-3 md:space-y-4">
+          <TabsContent value="featured" className="space-y-2 md:space-y-2">
             {isLoading ? (
               <div className="space-y-3 md:space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -778,17 +894,19 @@ export default function Challenges() {
                 </CardContent>
               </Card>
             ) : (
-              featuredChallenges.map((challenge: any) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onChatClick={handleChallengeClick}
-                />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 md:gap-2">
+                {featuredChallenges.map((challenge: any) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onChatClick={handleChallengeClick}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="pending" className="space-y-3 md:space-y-4">
+          <TabsContent value="pending" className="space-y-2 md:space-y-2">
             {isLoading ? (
               <div className="space-y-3 md:space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -830,17 +948,19 @@ export default function Challenges() {
                 </CardContent>
               </Card>
             ) : (
-              pendingChallenges.map((challenge: any) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onChatClick={handleChallengeClick}
-                />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 md:gap-2">
+                {pendingChallenges.map((challenge: any) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onChatClick={handleChallengeClick}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="active" className="space-y-3 md:space-y-4">
+          <TabsContent value="active" className="space-y-2 md:space-y-2">
             {activeChallenges.length === 0 ? (
               <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                 <CardContent className="text-center py-12">
@@ -857,17 +977,19 @@ export default function Challenges() {
                 </CardContent>
               </Card>
             ) : (
-              activeChallenges.map((challenge: any) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onChatClick={handleChallengeClick}
-                />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 md:gap-2">
+                {activeChallenges.map((challenge: any) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onChatClick={handleChallengeClick}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="awaiting_resolution" className="space-y-3 md:space-y-4">
+          <TabsContent value="awaiting_resolution" className="space-y-2 md:space-y-2">
             {awaitingResolutionChallenges.length === 0 ? (
               <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                 <CardContent className="text-center py-12">
@@ -884,17 +1006,19 @@ export default function Challenges() {
                 </CardContent>
               </Card>
             ) : (
-              awaitingResolutionChallenges.map((challenge: any) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onChatClick={handleChallengeClick}
-                />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-1 md:gap-2">
+                {awaitingResolutionChallenges.map((challenge: any) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onChatClick={handleChallengeClick}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="completed" className="space-y-3 md:space-y-4">
+          <TabsContent value="completed" className="space-y-2 md:space-y-2">
             {completedChallenges.length === 0 ? (
               <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                 <CardContent className="text-center py-12">
@@ -911,17 +1035,19 @@ export default function Challenges() {
                 </CardContent>
               </Card>
             ) : (
-              completedChallenges.map((challenge: any) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  onChatClick={handleChallengeClick}
-                />
-              ))
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+                {completedChallenges.map((challenge: any) => (
+                  <ChallengeCard
+                    key={challenge.id}
+                    challenge={challenge}
+                    onChatClick={handleChallengeClick}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="map" className="space-y-4">
+          <TabsContent value="map" className="space-y-2 md:space-y-2">
             <BantMap
               embedded={true}
               onChallengeUser={(mapUser) => {

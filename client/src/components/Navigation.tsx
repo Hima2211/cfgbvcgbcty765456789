@@ -238,10 +238,21 @@ export function Navigation() {
               {/* Mobile Right Side Icons - Only for authenticated users */}
               {user && (
                 <div className="flex items-center space-x-2">
-                  {/* Smart Search - Only show on Events/Home page */}
-                  {shouldShowLogo && (
-                    <SmartSearch placeholder="Search events, challenges, users..." />
-                  )}
+                      {/* Smart Search - Only show on Events/Home page */}
+                      {shouldShowLogo && (
+                        <SmartSearch placeholder="Search events, challenges, users..." />
+                      )}
+
+                      {/* Mobile challenges search icon - shown when on Challenges page */}
+                      {location.startsWith("/challenges") && (
+                        <button
+                          onClick={() => window.dispatchEvent(new CustomEvent("open-challenges-search"))}
+                          className="p-2 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                          aria-label="Search challenges"
+                        >
+                          <Search className="w-5 h-5" />
+                        </button>
+                      )}
 
                   {/* Leaderboard Icon - Always visible on mobile */}
                   <button
@@ -310,18 +321,6 @@ export function Navigation() {
               {/* Primary Navigation Group */}
               <div className="flex items-center bg-gray-50 dark:bg-slate-700/50 rounded-xl p-1 border border-gray-200 dark:border-slate-600">
                 <button
-                  onClick={() => handleNavigation("/events")}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                    location === "/events" || location.startsWith("/events")
-                      ? "bg-white dark:bg-slate-800 text-gray-900 dark:text-white shadow-lg"
-                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
-                  }`}
-                  data-tour="events"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Events
-                </button>
-                <button
                   onClick={() => handleNavigation("/challenges")}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                     location === "/challenges" ||
@@ -333,6 +332,18 @@ export function Navigation() {
                 >
                   <Trophy className="w-4 h-4" />
                   Challenges
+                </button>
+                <button
+                  onClick={() => handleNavigation("/events")}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    location === "/events" || location.startsWith("/events")
+                      ? "bg-white dark:bg-slate-800 text-gray-900 dark:text-white shadow-lg"
+                      : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-800/50"
+                  }`}
+                  data-tour="events"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Events
                 </button>
                 <button
                   onClick={() => handleNavigation("/friends")}
@@ -364,12 +375,19 @@ export function Navigation() {
               {/* Secondary Navigation Group */}
               <div className="flex items-center bg-gray-50 dark:bg-slate-700/50 rounded-xl p-1 border border-gray-200 dark:border-slate-600"></div>
 
-              {/* Search Bar - Show on all pages */}
+              {/* Search Bar - Wire to events or challenges depending on page */}
               <div className="ml-2">
                 <Input
-                  placeholder="Search events.."
+                  placeholder={location.startsWith("/challenges") ? "Search challenges..." : "Search events.."}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (location.startsWith("/challenges")) {
+                      window.dispatchEvent(new CustomEvent("challenges-search", { detail: v }));
+                    } else {
+                      setSearchTerm(v);
+                    }
+                  }}
                   className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 w-3/4 focus:ring-2 focus:ring-slate-400 focus:ring-offset-0 focus:border-slate-400 focus-visible:ring-slate-400 placeholder:text-slate-400 placeholder:text-sm"
                 />
               </div>
