@@ -297,15 +297,14 @@ export default function Challenges() {
   };
 
   const handleChallengeClick = (challenge: any) => {
-    // For open/admin challenges, show the join modal
-    if (challenge.status === 'open' && challenge.adminCreated) {
-      setSelectedChallenge(challenge);
-      setShowJoinModal(true);
-    } else {
-      // For personal challenges, show the chat modal
-      setSelectedChallenge(challenge);
-      setShowChat(true);
-    }
+    // Navigate to the challenge chat page instead of opening the modal.
+    // This allows users to view the chat page even if they're not a participant.
+    window.location.href = `/challenges/${challenge.id}/chat`;
+  };
+
+  const handleJoin = (challenge: any) => {
+    setSelectedChallenge(challenge);
+    setShowJoinModal(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -900,6 +899,7 @@ export default function Challenges() {
                     key={challenge.id}
                     challenge={challenge}
                     onChatClick={handleChallengeClick}
+                    onJoin={handleJoin}
                   />
                 ))}
               </div>
@@ -954,6 +954,7 @@ export default function Challenges() {
                     key={challenge.id}
                     challenge={challenge}
                     onChatClick={handleChallengeClick}
+                    onJoin={handleJoin}
                   />
                 ))}
               </div>
@@ -983,6 +984,7 @@ export default function Challenges() {
                     key={challenge.id}
                     challenge={challenge}
                     onChatClick={handleChallengeClick}
+                    onJoin={handleJoin}
                   />
                 ))}
               </div>
@@ -1012,6 +1014,7 @@ export default function Challenges() {
                     key={challenge.id}
                     challenge={challenge}
                     onChatClick={handleChallengeClick}
+                    onJoin={handleJoin}
                   />
                 ))}
               </div>
@@ -1041,6 +1044,7 @@ export default function Challenges() {
                     key={challenge.id}
                     challenge={challenge}
                     onChatClick={handleChallengeClick}
+                    onJoin={handleJoin}
                   />
                 ))}
               </div>

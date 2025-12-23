@@ -68,6 +68,7 @@ import { Navigation } from "@/components/Navigation";
 import { ErrorBoundary } from "react-error-boundary";
 import { Suspense, lazy } from "react";
 import EventDetails from "./pages/EventDetails";
+import ChallengeChatPage from "./pages/ChallengeChatPage";
 import { PrivyProvider } from '@privy-io/react-auth';
 import { privyConfig } from './lib/privyConfig';
 
@@ -217,6 +218,7 @@ function AppRouter() {
       <Route path="/telegram-auth" component={TelegramLink} />
       {/* Public Routes - Accessible to everyone */}
       <Route path="/events/:id/chat" component={EventChatPage} />
+      <Route path="/challenges/:id/chat" component={ChallengeChatPage} />
       <Route path="/events/:id" component={EventDetails} />
       <Route path="/event/:id" component={EventChatPage} />
 

@@ -65,9 +65,10 @@ interface ChallengeCardProps {
     };
   };
   onChatClick?: (challenge: any) => void;
+  onJoin?: (challenge: any) => void;
 }
 
-export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
+export function ChallengeCard({ challenge, onChatClick, onJoin }: ChallengeCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -215,7 +216,9 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
   const totalPool = amountNum * 2;
   const potentialWin = Math.round(totalPool * bonusMul);
 
-  const cardClickProps = isOpenAdminChallenge && onChatClick ? { onClick: () => onChatClick({ ...challenge, amount: String(challenge.amount) }), style: { cursor: 'pointer' } as any } : {};
+  // Do not make the whole card clickable. Only the action buttons (Join, Chat, Share)
+  // should be interactive to avoid accidental opens of modals or chat.
+  const cardClickProps = {};
 
   return (
     <Card className="border border-slate-200 dark:border-slate-600 theme-transition h-full overflow-hidden" {...cardClickProps}>
@@ -360,6 +363,32 @@ export function ChallengeCard({ challenge, onChatClick }: ChallengeCardProps) {
                 <X className="w-3 h-3 mr-1" />
                 Cancel
               </Button>
+            )}
+            {challenge.status === 'open' && (
+              <>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 text-white h-6 px-2 text-xs"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onJoin) return onJoin(challenge);
+                    // fallback: navigate to a join route (modal handled elsewhere)
+                    window.location.href = `/challenges/${challenge.id}/join`;
+                  }}
+                >
+                  Join
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-blue-500 text-blue-600 h-6 px-2 text-xs"
+                  onClick={(e) => { e.stopPropagation(); if (onChatClick) return onChatClick({ ...challenge, amount: String(challenge.amount) }); window.location.href = `/challenges/${challenge.id}/chat`; }}
+                >
+                  <MessageCircle className="w-3 h-3 mr-1" />
+                  Chat
+                </Button>
+              </>
             )}
             {(challenge.status === 'active' || challenge.status === 'pending') && onChatClick && (
                 <Button 

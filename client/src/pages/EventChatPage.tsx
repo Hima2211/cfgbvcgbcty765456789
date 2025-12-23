@@ -815,6 +815,20 @@ export default function EventChatPage() {
                     </span>
                   </div>
                 </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => window.location.href = `/challenges/${eventId}/chat`}
+                  className="rounded-xl px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                      <i className="fas fa-comments text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Open Chat
+                    </span>
+                  </div>
+                </DropdownMenuItem>
                 <div className="my-2 h-px bg-slate-200 dark:bg-slate-600"></div>
                 <DropdownMenuItem 
                   onClick={handleLeaveEvent}
